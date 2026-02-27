@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta, UTC
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
+import asyncio
 
 # Simple HTTP server so Render sees this as a web service
 class HealthCheck(BaseHTTPRequestHandler):
@@ -126,4 +127,9 @@ async def on_message(message):
             print("Timeout failed:", e)
 
 # Start the bot using the token from the environment variable
-client.run(TOKEN)
+async def start_bot():
+    await asyncio.sleep(5)  # wait before hitting Discord
+    await client.start(TOKEN)
+
+if __name__ == "__main__":
+    asyncio.run(start_bot())

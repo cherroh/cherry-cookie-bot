@@ -128,8 +128,15 @@ async def on_message(message):
 
 # Start the bot using the token from the environment variable
 async def start_bot():
-    await asyncio.sleep(5)  # wait before hitting Discord
-    await client.start(TOKEN)
+    await asyncio.sleep(5)
+
+    for attempt in range(5):
+        try:
+            await client.start(TOKEN)
+            break
+        except Exception as e:
+            print(f"Login attempt {attempt + 1} failed:", e)
+            await asyncio.sleep(3)
 
 if __name__ == "__main__":
     asyncio.run(start_bot())

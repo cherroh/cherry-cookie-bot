@@ -29,7 +29,9 @@ class HealthCheck(BaseHTTPRequestHandler):
             self.end_headers()
 
 def start_server():
-    server = HTTPServer(("0.0.0.0", 8080), HealthCheck)
+    # Use PORT from environment if provided (Render requires this)
+    port = int(os.getenv("PORT", 8080))
+    server = HTTPServer(("0.0.0.0", port), HealthCheck)
     server.serve_forever()
 
 # Run HTTP server in a background thread
@@ -44,11 +46,11 @@ if TOKEN is None:
     raise ValueError("Bot token not found in environment variables.")
 
 # Configuration constants
-LANDMINE_CHANCE = 0.001 # 0.1% chance to explode, should be 0.001
-LANDMINE_DURATION = 60 # in seconds
-COOLDOWN_SECONDS = 5 # prevents spam-trigger abuse
+LANDMINE_CHANCE = 0.001  # 0.1% chance to explode, should be 0.001
+LANDMINE_DURATION = 60  # in seconds
+COOLDOWN_SECONDS = 5  # prevents spam-trigger abuse
 LOG_CHANNEL_NAME = "timeout-hall-of-shame"  # logging channel, change this to your desired channel name or set to None to disable logging
-GIF_URL = "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExemFyaW1zdGpsZnR1cG51aDR0dGF4bHplaHQ4cmRxd2QwOGswOXR4bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/hvGKQL8lasDvIlWRBC/giphy.gif" # GIF of landmine
+GIF_URL = "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExemFyaW1zdGpsZnR1cG51aDR0dGF4bHplaHQ4cmRxd2QwOGswOXR4bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/hvGKQL8lasDvIlWRBC/giphy.gif"  # GIF of landmine
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -62,6 +64,8 @@ user_cooldowns = {}
 @client.event
 async def on_ready():
     print(f"Logged in as {client.user}")
+    print("Python version:", __import__("sys").version)
+    print("Discord version:", discord.__version__)
 
 # Main event handler for incoming messages
 @client.event
@@ -69,7 +73,7 @@ async def on_message(message):
     # Ignore messages from bots
     if message.author.bot:
         return
-    
+
     # Only operate in guilds (servers), ignore DMs
     if message.guild is None:
         return

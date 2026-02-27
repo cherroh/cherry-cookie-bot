@@ -28,6 +28,15 @@ class HealthCheck(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
+    # Fix 501 error from Render health checks
+    def do_HEAD(self):
+        if self.path == "/healthz":
+            self.send_response(200)
+            self.end_headers()
+        else:
+            self.send_response(404)
+            self.end_headers()
+
 def start_server():
     # Use PORT from environment if provided (Render requires this)
     port = int(os.getenv("PORT", 8080))
@@ -49,8 +58,8 @@ if TOKEN is None:
 LANDMINE_CHANCE = 0.001  # 0.1% chance to explode, should be 0.001
 LANDMINE_DURATION = 60  # in seconds
 COOLDOWN_SECONDS = 5  # prevents spam-trigger abuse
-LOG_CHANNEL_NAME = "timeout-hall-of-shame"  # logging channel, change this to your desired channel name or set to None to disable logging
-GIF_URL = "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExemFyaW1zdGpsZnR1cG51aDR0dGF4bHplaHQ4cmRxd2QwOGswOXR4bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/hvGKQL8lasDvIlWRBC/giphy.gif"  # GIF of landmine
+LOG_CHANNEL_NAME = "timeout-hall-of-shame"
+GIF_URL = "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExemFyaW1zdGpsZnR1cG51aDR0dGF4bHplaHQ4cmRxd2QwOGswOXR4bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/hvGKQL8lasDvIlWRBC/giphy.gif"
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -66,6 +75,7 @@ async def on_ready():
     print(f"Logged in as {client.user}")
     print("Python version:", __import__("sys").version)
     print("Discord version:", discord.__version__)
+    print("Bot is connected and running.")
 
 # Main event handler for incoming messages
 @client.event
@@ -101,32 +111,26 @@ async def on_message(message):
             # Update the cooldown for the user
             user_cooldowns[message.author.id] = now
 
-            # Calculate the chance percentage for display
             chance_percent = LANDMINE_CHANCE * 100
             chance_str = f"{chance_percent:g}"
 
-            # Send a message to the channel about the landmine trigger
             await message.channel.send(
                 f"💥 {message.author.mention} stepped on a landmine and has been timed out for 1 minute! "
                 f"({chance_str}% chance of occurring per message sent btw)"
             )
 
-            # Send the landmine GIF
             await message.channel.send(GIF_URL)
 
-            # Log the event in the specified log channel, if it exists
             log_channel = discord.utils.get(
                 message.guild.text_channels,
                 name=LOG_CHANNEL_NAME
             )
 
-            # Log the timeout event in the log channel
             if log_channel:
                 await log_channel.send(
                     f"🚨 {message.author} triggered a landmine in {message.channel.mention} and got a timeout!"
                 )
 
-        # Handle any exceptions that occur during the timeout process
         except Exception as e:
             print("Timeout failed:", e)
 

@@ -1,6 +1,6 @@
 """
 Cherry Cookie Landmine Bot for Discord
-bot.py is the development version of the bot, with the intended final configuration for landmine chance and logging.
+bot.py is the cloud version of the bot, intended to be deployed on Render
 
 Author: cherrow
 This bot randomly times out users who send messages in a server, simulating a "landmine" effect.
@@ -13,6 +13,22 @@ import random
 import discord
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, UTC
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import threading
+
+# Simple HTTP server so Render sees this as a web service
+class HealthCheck(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"OK")
+
+def start_server():
+    server = HTTPServer(("0.0.0.0", 8080), HealthCheck)
+    server.serve_forever()
+
+# Run HTTP server in a background thread
+threading.Thread(target=start_server, daemon=True).start()
 
 # Load the bot token from the .env file
 load_dotenv()

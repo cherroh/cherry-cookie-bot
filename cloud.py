@@ -19,9 +19,13 @@ import threading
 # Simple HTTP server so Render sees this as a web service
 class HealthCheck(BaseHTTPRequestHandler):
     def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"OK")
+        if self.path == "/healthz":
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"OK")
+        else:
+            self.send_response(404)
+            self.end_headers()
 
 def start_server():
     server = HTTPServer(("0.0.0.0", 8080), HealthCheck)
